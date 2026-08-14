@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Identidad visual · Evidencias
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  --color-brand: #37277e;
+  --color-brand-2: #37287d;
+  --color-brand-soft: #f1effa;
+  --color-brand-ring: #d9d4ef;
+
+  --color-accent: #e21915;
+  --color-accent-soft: #fdeceb;
+
+  --color-canvas: #f8f8fb;
+  --color-surface: #ffffff;
+  --color-ink: #1b1b1f;
+  --color-muted: #6b6b78;
+  --color-line: #e7e7ee;
+
+  --color-success: #22a06b;
+  --color-success-soft: #e8f6f0;
+  --color-warn: #f59e0b;
+  --color-warn-soft: #fef4e3;
+  --color-danger: #e21915;
+  --color-danger-soft: #fdeceb;
+
+  --radius-card: 16px;
+  --radius-btn: 12px;
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(27, 27, 31, 0.04), 0 1px 3px rgba(27, 27, 31, 0.03);
+  --shadow-raised: 0 4px 16px rgba(55, 39, 126, 0.08);
+  --shadow-float: 0 8px 32px rgba(55, 39, 126, 0.14);
+}
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  /* Evita el zoom automático de iOS al enfocar un campo. */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px;
+    font-family: inherit;
+  }
+
+  ::selection {
+    background: var(--color-brand);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@utility gradient-brand {
+  background-image: linear-gradient(135deg, #37277e 0%, #37287d 100%);
+}
+
+/* ─── Animaciones discretas (150–250 ms) ───────────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 220ms ease-out both;
+}
+
+@utility animate-pop-in {
+  animation: pop-in 200ms ease-out both;
+}
+
+@utility animate-toast-in {
+  animation: toast-in 180ms ease-out both;
+}
+
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #eeeef4;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.65) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Oculta la barra de scroll horizontal de los chips de filtros. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
