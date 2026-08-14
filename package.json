@@ -12,10 +12,15 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
+  "comentario_overrides": "Fuerza versiones sin CVE en dependencias internas de Next. El escáner de Railway bloquea el despliegue si detecta alguna.",
+  "overrides": {
+    "postcss": "^8.5.26",
+    "sharp": "^0.35.3"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.454.0",
-    "next": "15.0.3",
+    "next": "^15.5.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "server-only": "^0.0.1",
@@ -27,7 +32,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^8.57.0",
-    "eslint-config-next": "15.0.3",
+    "eslint-config-next": "^15.5.23",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.6.3"
   }
