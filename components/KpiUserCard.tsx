@@ -5,6 +5,8 @@ import { Card } from './ui/Card';
 
 function minutos(valor: number | null): string {
   if (valor === null || Number.isNaN(valor)) return '—';
+  // Redondear a "0 min" haría ver como instantáneo algo que sí tomó tiempo.
+  if (valor < 1) return '< 1 min';
   if (valor < 60) return `${Math.round(valor)} min`;
   const horas = Math.floor(valor / 60);
   const resto = Math.round(valor % 60);
