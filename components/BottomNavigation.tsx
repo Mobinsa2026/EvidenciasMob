@@ -2,14 +2,34 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { History, Home, Plus } from 'lucide-react';
+import { BarChart3, ClipboardList, History, Home, Plus } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import type { Role } from '@/lib/types';
 
-const ITEMS = [
-  { href: '/', label: 'Inicio', icon: Home },
-  { href: '/registrar', label: 'Registrar', icon: Plus, highlight: true },
-  { href: '/historial', label: 'Historial', icon: History },
-] as const;
+interface Item {
+  href: string;
+  label: string;
+  icon: typeof Home;
+  highlight?: boolean;
+}
+
+/**
+ * Mismo esqueleto para los dos roles; solo cambia la última pestaña: el jefe
+ * mira al equipo, el asistente mira su propio avance.
+ */
+function itemsPara(role: Role): Item[] {
+  return [
+    { href: '/', label: 'Inicio', icon: Home },
+    { href: '/tareas', label: 'Tareas', icon: ClipboardList },
+    { href: '/registrar', label: 'Registrar', icon: Plus, highlight: true },
+    { href: '/historial', label: 'Historial', icon: History },
+    {
+      href: '/kpi',
+      label: role === 'jefe' ? 'Equipo' : 'Avance',
+      icon: BarChart3,
+    },
+  ];
+}
 
 function useActive(href: string) {
   const pathname = usePathname();
@@ -21,21 +41,21 @@ function useActive(href: string) {
  * Dock flotante. No se pega al borde: va suspendido sobre el contenido con
  * márgenes laterales, forma de píldora y sombra marcada.
  */
-export function BottomNavigation() {
+export function BottomNavigation({ role }: { role: Role }) {
   return (
     <nav
       aria-label="Navegación principal"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4 md:hidden"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-4 md:hidden"
       style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
     >
       <ul
         className={cn(
-          'pointer-events-auto flex w-full max-w-sm items-center justify-between',
-          'rounded-full border border-line/80 bg-surface/85 px-2.5 py-2',
+          'pointer-events-auto flex w-full max-w-md items-center justify-between',
+          'rounded-full border border-line/80 bg-surface/85 px-1.5 py-2',
           'shadow-float backdrop-blur-xl',
         )}
       >
-        {ITEMS.map((item) => (
+        {itemsPara(role).map((item) => (
           <DockItem key={item.href} {...item} />
         ))}
       </ul>
@@ -43,22 +63,12 @@ export function BottomNavigation() {
   );
 }
 
-function DockItem({
-  href,
-  label,
-  icon: Icon,
-  highlight,
-}: {
-  href: string;
-  label: string;
-  icon: typeof Home;
-  highlight?: boolean;
-}) {
+function DockItem({ href, label, icon: Icon, highlight }: Item) {
   const active = useActive(href);
 
   if (highlight) {
     return (
-      <li className="-mt-7">
+      <li className="-mt-7 px-1">
         <Link
           href={href}
           aria-label={label}
@@ -78,7 +88,7 @@ function DockItem({
           </span>
           <span
             className={cn(
-              'text-[11px] font-bold transition-colors duration-200',
+              'text-[10px] font-bold transition-colors duration-200',
               active ? 'text-brand' : 'text-muted',
             )}
           >
@@ -90,18 +100,18 @@ function DockItem({
   }
 
   return (
-    <li className="flex-1">
+    <li className="min-w-0 flex-1">
       <Link
         href={href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'mx-auto flex h-12 w-full max-w-24 flex-col items-center justify-center gap-0.5 rounded-full',
+          'mx-auto flex h-12 w-full flex-col items-center justify-center gap-0.5 rounded-2xl px-0.5',
           'transition-colors duration-200',
           active ? 'bg-brand-soft text-brand' : 'text-muted hover:text-brand',
         )}
       >
-        <Icon className={cn('size-[21px]', active && 'stroke-[2.4]')} aria-hidden />
-        <span className="text-[11px] font-semibold">{label}</span>
+        <Icon className={cn('size-5 shrink-0', active && 'stroke-[2.4]')} aria-hidden />
+        <span className="w-full truncate text-center text-[10px] font-semibold">{label}</span>
       </Link>
     </li>
   );
@@ -111,7 +121,7 @@ function DockItem({
  * Dock flotante de escritorio. Se posiciona en absoluto sobre el borde inferior
  * del encabezado para que quede suspendido sin ocupar altura propia.
  */
-export function DesktopNavigation() {
+export function DesktopNavigation({ role }: { role: Role }) {
   return (
     <>
       {/* Difumina el contenido que pasa por detrás del dock al hacer scroll. */}
@@ -131,7 +141,7 @@ export function DesktopNavigation() {
             'shadow-float backdrop-blur-xl',
           )}
         >
-          {ITEMS.map((item) => (
+          {itemsPara(role).map((item) => (
             <DesktopItem key={item.href} {...item} />
           ))}
         </ul>
@@ -140,17 +150,7 @@ export function DesktopNavigation() {
   );
 }
 
-function DesktopItem({
-  href,
-  label,
-  icon: Icon,
-  highlight,
-}: {
-  href: string;
-  label: string;
-  icon: typeof Home;
-  highlight?: boolean;
-}) {
+function DesktopItem({ href, label, icon: Icon, highlight }: Item) {
   const active = useActive(href);
 
   return (
@@ -159,7 +159,7 @@ function DesktopItem({
         href={href}
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'flex h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold',
+          'flex h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold',
           'transition-all duration-200 ease-out active:scale-[0.97]',
           active
             ? 'gradient-brand text-white shadow-raised'

@@ -2,15 +2,32 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, PackageCheck, Users } from 'lucide-react';
+import { ArrowLeft, PackageCheck } from 'lucide-react';
+import type { SessionUser } from '@/lib/types';
+import { NotificationBell } from './NotificationBell';
+import { UserMenu } from './UserMenu';
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
-  '/registrar': { title: 'Nueva evidencia', subtitle: 'Registra la información de la entrega.' },
-  '/historial': { title: 'Historial de entregas', subtitle: 'Consulta todas las evidencias registradas.' },
-  '/empleados': { title: 'Empleados', subtitle: 'Administra quién puede realizar entregas.' },
+  '/registrar': {
+    title: 'Nueva evidencia',
+    subtitle: 'Registra la información de la entrega.',
+  },
+  '/historial': {
+    title: 'Historial de entregas',
+    subtitle: 'Consulta todas las evidencias registradas.',
+  },
+  '/empleados': {
+    title: 'Empleados',
+    subtitle: 'Administra quién puede realizar entregas.',
+  },
+  '/tareas': { title: 'Tareas', subtitle: 'Entregas asignadas y su avance.' },
+  '/tareas/nueva': { title: 'Asignar entrega', subtitle: 'Crea la tarea y define el plazo.' },
+  '/kpi': { title: 'Desempeño', subtitle: 'Indicadores por persona.' },
+  '/notificaciones': { title: 'Notificaciones', subtitle: 'Tus avisos recientes.' },
+  '/cuenta': { title: 'Mi cuenta', subtitle: 'Datos de acceso y contraseña.' },
 };
 
-export function Header() {
+export function Header({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -19,11 +36,13 @@ export function Header() {
     TITLES[pathname] ??
     (pathname.startsWith('/evidencias/')
       ? { title: 'Evidencia de entrega', subtitle: 'Comprobante digital de la entrega.' }
-      : null);
+      : pathname.startsWith('/tareas/')
+        ? { title: 'Detalle de la tarea', subtitle: 'Cronómetro, evidencia y bitácora.' }
+        : null);
 
   return (
     <header className="gradient-brand text-white">
-      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
+      <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-4 sm:gap-3 sm:px-6">
         {!isHome && (
           <button
             type="button"
@@ -50,15 +69,10 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="ml-auto flex items-center gap-1">
-          <Link
-            href="/empleados"
-            aria-label="Empleados"
-            className="-mr-1.5 flex size-11 items-center justify-center rounded-xl transition-colors duration-200 hover:bg-white/15 active:bg-white/25"
-          >
-            <Users className="size-[18px]" aria-hidden />
-          </Link>
-        </nav>
+        <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          <NotificationBell />
+          <UserMenu user={user} />
+        </div>
       </div>
     </header>
   );

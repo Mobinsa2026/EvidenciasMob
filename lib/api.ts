@@ -23,6 +23,14 @@ export function tooManyRequests(retryAfterSeconds: number) {
   );
 }
 
+export function unauthorized(message = 'Inicia sesión para continuar.') {
+  return jsonError(message, 401);
+}
+
+export function forbidden(message = 'No tienes permiso para esta acción.') {
+  return jsonError(message, 403);
+}
+
 /** Traduce cualquier excepción a una respuesta segura (sin filtrar internos). */
 export function serverError(error: unknown, fallback = 'Ocurrió un error inesperado.') {
   const message = error instanceof Error ? error.message : String(error);

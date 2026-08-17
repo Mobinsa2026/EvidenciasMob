@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
+  ClipboardCheck,
   Hash,
   MapPin,
   PenLine,
@@ -42,19 +43,44 @@ const PLACEHOLDER: Record<DocumentType, string> = {
   factura: 'Ej. FAC-004215',
 };
 
-export function DeliveryForm({ initialEmployees }: { initialEmployees: Employee[] }) {
+/** Datos mínimos de la tarea que esta evidencia va a cerrar. */
+export interface AssignmentContext {
+  id: string;
+  folio: string;
+  document_type: DocumentType;
+  document_number: string;
+  client_name: string;
+  title: string;
+}
+
+export function DeliveryForm({
+  initialEmployees,
+  currentEmployeeId,
+  assignment,
+}: {
+  initialEmployees: Employee[];
+  currentEmployeeId?: string | null;
+  assignment?: AssignmentContext | null;
+}) {
   const toast = useToast();
   const formTopRef = useRef<HTMLDivElement>(null);
 
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
-  const [documentType, setDocumentType] = useState<DocumentType>('orden_trabajo');
-  const [documentNumber, setDocumentNumber] = useState('');
-  const [clientName, setClientName] = useState('');
+  const [documentType, setDocumentType] = useState<DocumentType>(
+    assignment?.document_type ?? 'orden_trabajo',
+  );
+  const [documentNumber, setDocumentNumber] = useState(assignment?.document_number ?? '');
+  const [clientName, setClientName] = useState(assignment?.client_name ?? '');
   const [receivedBy, setReceivedBy] = useState('');
-  const [deliveredBy, setDeliveredBy] = useState(initialEmployees[0]?.id ?? '');
+  // Por defecto, quien entrega es el propio usuario en sesión.
+  const [deliveredBy, setDeliveredBy] = useState(
+    currentEmployeeId && initialEmployees.some((e) => e.id === currentEmployeeId)
+      ? currentEmployeeId
+      : (initialEmployees[0]?.id ?? ''),
+  );
   const [status, setStatus] = useState<DeliveryStatus>('completa');
-  const [title, setTitle] = useState('');
-  const [titleEdited, setTitleEdited] = useState(false);
+  const [title, setTitle] = useState(assignment?.title ?? '');
+  const [titleEdited, setTitleEdited] = useState(Boolean(assignment));
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [signatureCanvas, setSignatureCanvas] = useState<HTMLCanvasElement | null>(null);
@@ -127,6 +153,7 @@ export function DeliveryForm({ initialEmployees }: { initialEmployees: Employee[
       form.set('title', title);
       form.set('notes', notes);
       form.set('idempotency_key', idempotencyKey);
+      if (assignment) form.set('assignment_id', assignment.id);
 
       if (location) {
         form.set('latitude', String(location.latitude));
@@ -192,6 +219,19 @@ export function DeliveryForm({ initialEmployees }: { initialEmployees: Employee[
 
   return (
     <div ref={formTopRef} className="space-y-5 animate-fade-up">
+      {assignment && (
+        <div className="flex items-start gap-3 rounded-card border border-brand-ring bg-brand-soft p-4">
+          <ClipboardCheck className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-brand">Cerrarás una tarea asignada</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-ink">
+              Al registrar esta evidencia se detiene el cronómetro de{' '}
+              <span className="font-mono font-semibold">{assignment.folio}</span>.
+            </p>
+          </div>
+        </div>
+      )}
+
       <ProgressBar info={progress.info} evidence={progress.evidence} />
 
       {/* ── 1 · Documento ─────────────────────────────────────────────── */}

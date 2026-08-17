@@ -1,20 +1,38 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { ArrowRight, CalendarDays, FileStack, Plus, Truck, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  ClipboardList,
+  FileStack,
+  Plus,
+  Truck,
+  Users,
+} from 'lucide-react';
+import { AssignmentCard } from '@/components/AssignmentCard';
 import { DeliveryRow } from '@/components/DeliveryCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SetupNotice } from '@/components/SetupNotice';
 import { StatsCard } from '@/components/StatsCard';
 import { Card } from '@/components/ui/Card';
 import { Skeleton, StatsSkeleton } from '@/components/ui/Skeleton';
+import { listAssignments } from '@/lib/assignments';
+import { requireUser } from '@/lib/auth';
 import { getRecentDeliveries, getStats } from '@/lib/queries';
+import type { SessionUser } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await requireUser();
+
   return (
     <div className="space-y-7 animate-fade-up">
-      <Hero />
+      <Hero user={user} />
+
+      <Suspense fallback={<Skeleton className="h-24" />}>
+        <TareasAbiertas user={user} />
+      </Suspense>
 
       <Suspense fallback={<StatsSkeleton />}>
         <StatsSection />
@@ -27,25 +45,88 @@ export default function HomePage() {
   );
 }
 
-function Hero() {
+function Hero({ user }: { user: SessionUser }) {
+  const esJefe = user.role === 'jefe';
+  const nombre = user.name.split(' ')[0];
+
   return (
     <section>
-      <h1 className="text-[26px] font-bold leading-tight tracking-tight text-brand sm:text-3xl">
-        Evidencias de Entrega
+      <p className="text-sm font-semibold text-muted">Hola, {nombre}</p>
+      <h1 className="mt-1 text-[26px] font-bold leading-tight tracking-tight text-brand sm:text-3xl">
+        {esJefe ? 'Control de Entregas' : 'Evidencias de Entrega'}
       </h1>
       <p className="mt-2 max-w-md text-[15px] leading-relaxed text-muted">
-        Registra y consulta las evidencias de órdenes de trabajo y facturas entregadas.
+        {esJefe
+          ? 'Asigna entregas, sigue los tiempos del equipo y consulta las evidencias.'
+          : 'Atiende tus entregas asignadas y registra la evidencia de cada una.'}
       </p>
 
-      <Link
-        href="/registrar"
-        className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-btn gradient-brand text-base font-semibold text-white shadow-raised transition-all duration-200 hover:brightness-110 active:scale-[0.985] sm:w-auto sm:px-7"
-      >
-        <Plus className="size-5" aria-hidden />
-        Registrar nueva entrega
-      </Link>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        {esJefe && (
+          <Link
+            href="/tareas/nueva"
+            className="flex h-14 items-center justify-center gap-2 rounded-btn gradient-brand px-7 text-base font-semibold text-white shadow-raised transition-all duration-200 hover:brightness-110 active:scale-[0.985]"
+          >
+            <ClipboardList className="size-5" aria-hidden />
+            Asignar entrega
+          </Link>
+        )}
+
+        <Link
+          href="/registrar"
+          className={
+            esJefe
+              ? 'flex h-14 items-center justify-center gap-2 rounded-btn border border-brand bg-surface px-7 text-base font-semibold text-brand transition-colors duration-200 hover:bg-brand-soft'
+              : 'flex h-14 items-center justify-center gap-2 rounded-btn gradient-brand px-7 text-base font-semibold text-white shadow-raised transition-all duration-200 hover:brightness-110 active:scale-[0.985]'
+          }
+        >
+          <Plus className="size-5" aria-hidden />
+          Registrar nueva entrega
+        </Link>
+      </div>
     </section>
   );
+}
+
+/** Aviso de lo que está abierto ahora mismo: es lo primero que importa. */
+async function TareasAbiertas({ user }: { user: SessionUser }) {
+  try {
+    const esJefe = user.role === 'jefe';
+    const abiertas = await listAssignments({
+      assignedTo: esJefe ? undefined : user.id,
+      status: 'abiertas',
+      limit: 3,
+    });
+
+    if (abiertas.length === 0) return null;
+
+    return (
+      <section>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-bold tracking-tight text-ink">
+            {esJefe ? 'Tareas abiertas' : 'Tus tareas de hoy'}
+          </h2>
+          <Link
+            href="/tareas"
+            className="-my-2 inline-flex min-h-11 items-center gap-1 py-2 text-sm font-semibold text-brand transition-colors duration-200 hover:text-brand-2"
+          >
+            Ver todas
+            <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
+
+        <ul className="space-y-3">
+          {abiertas.map((assignment) => (
+            <li key={assignment.id}>
+              <AssignmentCard assignment={assignment} mostrarPersona={esJefe} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  } catch {
+    return null;
+  }
 }
 
 async function StatsSection() {

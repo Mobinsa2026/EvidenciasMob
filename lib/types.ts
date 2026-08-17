@@ -80,6 +80,132 @@ export const STATUS_LABEL: Record<DeliveryStatus, string> = {
   no_entregada: 'No se pudo entregar',
 };
 
+// ─── Usuarios y roles ───────────────────────────────────────────────────────
+
+export type Role = 'jefe' | 'asistente';
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  username: string;
+  role: Role;
+  employee_id: string | null;
+}
+
+export interface AppUser extends SessionUser {
+  active: boolean;
+  last_login_at: string | null;
+  created_at: string;
+}
+
+// ─── Tareas asignadas ───────────────────────────────────────────────────────
+
+export type AssignmentStatus =
+  | 'pendiente'
+  | 'en_progreso'
+  | 'pausada'
+  | 'completada'
+  | 'cancelada';
+
+export type AssignmentEventType =
+  | 'asignada'
+  | 'iniciada'
+  | 'pausada'
+  | 'reanudada'
+  | 'completada'
+  | 'cancelada';
+
+export interface Assignment {
+  id: string;
+  folio: string;
+  document_type: DocumentType;
+  document_number: string;
+  client_name: string;
+  title: string;
+  instructions: string | null;
+  address: string | null;
+  assigned_to: string;
+  created_by: string;
+  time_limit_minutes: number;
+  status: AssignmentStatus;
+  started_at: string | null;
+  due_at: string | null;
+  completed_at: string | null;
+  paused_seconds: number;
+  paused_at: string | null;
+  delivery_id: string | null;
+  created_at: string;
+}
+
+export interface AssignmentView extends Assignment {
+  assigned_to_name: string;
+  created_by_name: string;
+  /** true si el plazo ya venció y la tarea sigue abierta. */
+  vencida: boolean;
+  /** Segundos activos consumidos (sin contar pausas). */
+  segundos_activos: number;
+  /** Segundos restantes del plazo; negativo si se pasó. */
+  segundos_restantes: number;
+}
+
+export interface AssignmentEvent {
+  id: string;
+  assignment_id: string;
+  user_id: string;
+  user_name: string;
+  type: AssignmentEventType;
+  photo_url: string | null;
+  /** URL firmada temporal de la fotografía. */
+  photo: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  assignment_id: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface UserKpi {
+  user_id: string;
+  user_name: string;
+  asignadas: number;
+  completadas: number;
+  en_curso: number;
+  vencidas: number;
+  a_tiempo: number;
+  pct_a_tiempo: number | null;
+  minutos_promedio: number | null;
+  minutos_pausa_prom: number | null;
+  minutos_respuesta: number | null;
+  entregas_totales: number;
+}
+
+export const ASSIGNMENT_STATUS_LABEL: Record<AssignmentStatus, string> = {
+  pendiente: 'Pendiente',
+  en_progreso: 'En progreso',
+  pausada: 'Pausada',
+  completada: 'Completada',
+  cancelada: 'Cancelada',
+};
+
+export const ASSIGNMENT_EVENT_LABEL: Record<AssignmentEventType, string> = {
+  asignada: 'Tarea asignada',
+  iniciada: 'Entrega iniciada',
+  pausada: 'Entrega pausada',
+  reanudada: 'Entrega reanudada',
+  completada: 'Entrega completada',
+  cancelada: 'Tarea cancelada',
+};
+
+/** Plazos sugeridos al asignar, en minutos. */
+export const TIME_PRESETS = [30, 60, 120, 240, 480] as const;
+
 export const MAX_PHOTOS = 5;
 export const MIN_PHOTOS = 1;
 export const MAX_NOTES = 500;

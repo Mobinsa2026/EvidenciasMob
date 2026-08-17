@@ -1,5 +1,14 @@
 import { NextRequest } from 'next/server';
-import { jsonError, jsonOk, serverError, tooManyRequests } from '@/lib/api';
+import {
+  forbidden,
+  jsonError,
+  jsonOk,
+  serverError,
+  tooManyRequests,
+  unauthorized,
+} from '@/lib/api';
+import { getAssignment, notificarJefes } from '@/lib/assignments';
+import { UnauthorizedError, requireUser } from '@/lib/auth';
 import { searchDeliveries } from '@/lib/queries';
 import { limitRead, limitWrite, verifyTurnstile } from '@/lib/rate-limit';
 import {
@@ -17,7 +26,7 @@ import {
   MAX_SIGNATURE_BYTES,
   MIN_PHOTOS,
 } from '@/lib/types';
-import { deliveryInputSchema, fieldErrors } from '@/lib/validation';
+import { deliveryInputSchema, fieldErrors, sanitizeText } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -58,6 +67,8 @@ export async function POST(request: NextRequest) {
   let uploadedSignature: string | null = null;
 
   try {
+    const user = await requireUser();
+
     const form = await request.formData().catch(() => null);
     if (!form) return jsonError('No se recibió la información de la entrega.', 400);
 
@@ -129,6 +140,30 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
+    // 3.5 · Si la evidencia cierra una tarea asignada, debe ser del responsable
+    const assignmentId = sanitizeText(form.get('assignment_id')) || null;
+    let assignment = null;
+
+    if (assignmentId) {
+      assignment = await getAssignment(assignmentId);
+
+      if (!assignment) {
+        return jsonError('La tarea indicada no existe.', 404);
+      }
+      if (assignment.assigned_to !== user.id) {
+        return forbidden('Esta tarea está asignada a otra persona.');
+      }
+      if (assignment.status === 'completada') {
+        return jsonError('Esa tarea ya fue completada.', 409);
+      }
+      if (assignment.status === 'cancelada') {
+        return jsonError('Esa tarea fue cancelada.', 409);
+      }
+      if (assignment.status === 'pendiente') {
+        return jsonError('Primero inicia la tarea para poder completarla.', 409);
+      }
+    }
+
     // 4 · Protección contra envíos duplicados (doble tap, reintento de red)
     if (input.idempotency_key) {
       const { data: existing } = await supabase
@@ -191,6 +226,8 @@ export async function POST(request: NextRequest) {
         longitude: input.longitude ?? null,
         location_accuracy: input.location_accuracy ?? null,
         idempotency_key: input.idempotency_key ?? null,
+        assignment_id: assignment?.id ?? null,
+        created_by: user.id,
       })
       .select('id, folio, created_at')
       .single();
@@ -213,6 +250,58 @@ export async function POST(request: NextRequest) {
       throw new Error(photosError.message);
     }
 
+    // 9 · Cierre de la tarea. El cronómetro solo se detiene aquí, con la
+    //     evidencia ya guardada: no hay forma de pararlo sin fotografías.
+    let assignmentClosed = null;
+
+    if (assignment) {
+      const ahora = new Date();
+
+      // Una pausa abierta se contabiliza antes de cerrar.
+      const pausaSegundos = assignment.paused_at
+        ? Math.max(
+            0,
+            Math.round((ahora.getTime() - new Date(assignment.paused_at).getTime()) / 1000),
+          )
+        : 0;
+
+      const { error: closeError } = await supabase
+        .from('assignments')
+        .update({
+          status: 'completada',
+          completed_at: ahora.toISOString(),
+          paused_at: null,
+          paused_seconds: assignment.paused_seconds + pausaSegundos,
+          delivery_id: delivery.id,
+        })
+        .eq('id', assignment.id);
+
+      if (closeError) throw new Error(closeError.message);
+
+      await supabase.from('assignment_events').insert({
+        assignment_id: assignment.id,
+        user_id: user.id,
+        type: 'completada',
+        photo_url: uploadedPhotos[0],
+        note: `Evidencia ${delivery.folio}`,
+      });
+
+      assignmentClosed = await getAssignment(assignment.id);
+
+      const dentroDePlazo =
+        assignmentClosed && assignmentClosed.segundos_restantes >= 0
+          ? 'dentro del plazo'
+          : 'fuera del plazo';
+
+      await notificarJefes({
+        type: 'tarea_completada',
+        title: `${user.name} completó una entrega`,
+        body: `${assignment.document_number} · ${assignment.client_name} · ${dentroDePlazo}`,
+        assignmentId: assignment.id,
+        excluir: user.id,
+      });
+    }
+
     return jsonOk(
       {
         delivery: {
@@ -222,6 +311,7 @@ export async function POST(request: NextRequest) {
           employee_name: employee.name,
           photo_count: uploadedPhotos.length,
         },
+        assignment: assignmentClosed,
       },
       201,
     );
@@ -229,6 +319,7 @@ export async function POST(request: NextRequest) {
     // Limpieza best-effort de lo que sí alcanzó a subirse.
     await removeFiles(PHOTOS_BUCKET, uploadedPhotos);
     if (uploadedSignature) await removeFiles(SIGNATURES_BUCKET, [uploadedSignature]);
+    if (error instanceof UnauthorizedError) return unauthorized();
     return serverError(error, 'No se pudo registrar la evidencia. Inténtalo de nuevo.');
   }
 }

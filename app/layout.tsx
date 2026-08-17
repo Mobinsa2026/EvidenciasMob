@@ -3,7 +3,9 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { BottomNavigation, DesktopNavigation } from '@/components/BottomNavigation';
+import { SessionProvider } from '@/components/SessionProvider';
 import { ToastProvider } from '@/components/ui/Toast';
+import { getSessionUser } from '@/lib/auth';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -31,24 +33,33 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Sin sesión solo se llega a /login, que se muestra sin la interfaz de la app.
+  const user = await getSessionUser().catch(() => null);
+
   return (
     <html lang="es" className={inter.variable}>
       <body className="min-h-dvh">
         <ToastProvider>
-          {/* El dock de escritorio va en absoluto sobre el borde del encabezado,
-              así que no suma altura al bloque fijo. */}
-          <div className="sticky top-0 z-50">
-            <Header />
-            <DesktopNavigation />
-          </div>
+          {user ? (
+            <SessionProvider user={user}>
+              {/* El dock de escritorio va en absoluto sobre el borde del
+                  encabezado, así que no suma altura al bloque fijo. */}
+              <div className="sticky top-0 z-50">
+                <Header user={user} />
+                <DesktopNavigation role={user.role} />
+              </div>
 
-          {/* Espacio extra para que ningún dock tape el contenido. */}
-          <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-5 sm:px-6 md:pb-16 md:pt-16">
-            {children}
-          </main>
+              {/* Espacio extra para que ningún dock tape el contenido. */}
+              <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-5 sm:px-6 md:pb-16 md:pt-16">
+                {children}
+              </main>
 
-          <BottomNavigation />
+              <BottomNavigation role={user.role} />
+            </SessionProvider>
+          ) : (
+            children
+          )}
         </ToastProvider>
       </body>
     </html>
