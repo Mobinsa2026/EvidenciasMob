@@ -13,6 +13,8 @@ interface EmployeeSelectorProps {
   error?: string;
   onChange: (id: string) => void;
   onCreated: (employee: Employee) => void;
+  /** Dar de alta empleados es exclusivo del jefe. */
+  puedeAgregar?: boolean;
 }
 
 export function EmployeeSelector({
@@ -21,6 +23,7 @@ export function EmployeeSelector({
   error,
   onChange,
   onCreated,
+  puedeAgregar = false,
 }: EmployeeSelectorProps) {
   const toast = useToast();
   const [adding, setAdding] = useState(false);
@@ -155,7 +158,7 @@ export function EmployeeSelector({
             </Button>
           </div>
         </div>
-      ) : (
+      ) : puedeAgregar ? (
         <button
           type="button"
           onClick={() => setAdding(true)}
@@ -164,7 +167,7 @@ export function EmployeeSelector({
           <Plus className="size-4" aria-hidden />
           Agregar empleado
         </button>
-      )}
+      ) : null}
 
       {error && (
         <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-danger animate-fade-up">

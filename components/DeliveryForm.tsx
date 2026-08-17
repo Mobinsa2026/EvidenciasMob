@@ -26,6 +26,7 @@ import {
 import { buildTitle } from '@/lib/validation';
 import { DocumentSelector } from './DocumentSelector';
 import { EmployeeSelector } from './EmployeeSelector';
+import { useSession } from './SessionProvider';
 import { LocationCapture, type LocationValue } from './LocationCapture';
 import { PhotoUploader, type PhotoItem } from './PhotoUploader';
 import { SignaturePad } from './SignaturePad';
@@ -63,6 +64,7 @@ export function DeliveryForm({
   assignment?: AssignmentContext | null;
 }) {
   const toast = useToast();
+  const sesion = useSession();
   const formTopRef = useRef<HTMLDivElement>(null);
 
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
@@ -281,6 +283,7 @@ export function DeliveryForm({
           employees={employees.filter((item) => item.active)}
           value={deliveredBy}
           error={errors.delivered_by}
+          puedeAgregar={sesion.role === 'jefe'}
           onChange={(id) => {
             setDeliveredBy(id);
             setErrors((current) => ({ ...current, delivered_by: '' }));

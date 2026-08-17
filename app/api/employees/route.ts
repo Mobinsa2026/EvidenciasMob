@@ -1,5 +1,13 @@
 import { NextRequest } from 'next/server';
-import { jsonError, jsonOk, serverError, tooManyRequests } from '@/lib/api';
+import {
+  forbidden,
+  jsonError,
+  jsonOk,
+  serverError,
+  tooManyRequests,
+  unauthorized,
+} from '@/lib/api';
+import { ForbiddenError, UnauthorizedError, requireJefe } from '@/lib/auth';
 import { getEmployees } from '@/lib/queries';
 import { limitRead, limitWrite } from '@/lib/rate-limit';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
@@ -20,12 +28,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST /api/employees  { name } */
+/** POST /api/employees  { name } — solo el jefe da de alta empleados. */
 export async function POST(request: NextRequest) {
   const limit = limitWrite(request);
   if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds);
 
   try {
+    await requireJefe();
+
     const body = await request.json().catch(() => null);
     const parsed = employeeInputSchema.safeParse(body ?? {});
     if (!parsed.success) {
@@ -68,6 +78,10 @@ export async function POST(request: NextRequest) {
     if (error) throw new Error(error.message);
     return jsonOk({ employee: data }, 201);
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorized();
+    if (error instanceof ForbiddenError) {
+      return forbidden('Solo el jefe puede registrar empleados.');
+    }
     return serverError(error, 'No se pudo registrar el empleado.');
   }
 }
