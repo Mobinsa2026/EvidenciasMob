@@ -60,7 +60,7 @@ export default async function TareaPage({
 
       <AssignmentTimer assignment={assignment} puedeOperar={esResponsable} />
 
-      <Card>
+      <Card className="p-5">
         <h2 className="mb-3 text-sm font-bold text-ink">Detalle de la entrega</h2>
 
         <dl className="divide-y divide-line text-sm">

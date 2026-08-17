@@ -26,12 +26,21 @@ export const STATUS_STYLES: Record<
   },
 };
 
+/** Etiqueta corta para columnas angostas, donde el texto completo no cabe. */
+const STATUS_LABEL_SHORT: Record<DeliveryStatus, string> = {
+  completa: 'Completa',
+  parcial: 'Parcial',
+  no_entregada: 'No entregada',
+};
+
 export function StatusBadge({
   status,
   className,
+  compact,
 }: {
   status: DeliveryStatus;
   className?: string;
+  compact?: boolean;
 }) {
   const style = STATUS_STYLES[status];
   const Icon = style.icon;
@@ -39,13 +48,16 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold',
+        'inline-flex items-center gap-1.5 rounded-full border font-semibold',
+        compact ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs',
         style.badge,
         className,
       )}
     >
-      <Icon className="size-3.5" aria-hidden />
-      {STATUS_LABEL[status]}
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">
+        {compact ? STATUS_LABEL_SHORT[status] : STATUS_LABEL[status]}
+      </span>
     </span>
   );
 }

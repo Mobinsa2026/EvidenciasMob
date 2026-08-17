@@ -80,7 +80,7 @@ export function NewAssignmentForm({ personas }: { personas: Persona[] }) {
 
   return (
     <form onSubmit={enviar} className="space-y-5 animate-fade-up">
-      <Card>
+      <Card className="p-5">
         <SectionTitle numero={1} titulo="Documento" descripcion="Qué se va a entregar." />
 
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -151,7 +151,7 @@ export function NewAssignmentForm({ personas }: { personas: Persona[] }) {
         </div>
       </Card>
 
-      <Card>
+      <Card className="p-5">
         <SectionTitle numero={2} titulo="Responsable" descripcion="Quién hace la entrega." />
 
         {personas.length === 0 ? (
@@ -215,7 +215,7 @@ export function NewAssignmentForm({ personas }: { personas: Persona[] }) {
         )}
       </Card>
 
-      <Card>
+      <Card className="p-5">
         <SectionTitle
           numero={3}
           titulo="Plazo"
@@ -270,7 +270,7 @@ export function NewAssignmentForm({ personas }: { personas: Persona[] }) {
         </div>
       </Card>
 
-      <Card>
+      <Card className="p-5">
         <SectionTitle numero={4} titulo="Detalle" descripcion="Título e instrucciones." />
 
         <div className="mt-4 space-y-4">

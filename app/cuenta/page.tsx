@@ -12,7 +12,7 @@ export default async function CuentaPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-5 animate-fade-up">
-      <Card>
+      <Card className="p-5">
         <div className="flex items-center gap-3">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-base font-bold text-brand">
             {user.name

@@ -89,7 +89,7 @@ export function AssignmentTimer({
 
   if (assignment.status === 'completada') {
     return (
-      <Card className="border-success/30 bg-success-soft/40">
+      <Card className="border-success/30 bg-success-soft/40 p-5">
         <div className="flex items-start gap-3">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success-soft text-success">
             <CheckCircle2 className="size-5" aria-hidden />
@@ -113,7 +113,7 @@ export function AssignmentTimer({
 
   if (assignment.status === 'cancelada') {
     return (
-      <Card>
+      <Card className="p-5">
         <p className="text-sm font-semibold text-muted">Esta tarea fue cancelada.</p>
       </Card>
     );
@@ -122,7 +122,7 @@ export function AssignmentTimer({
   return (
     <Card
       className={cn(
-        'text-center',
+        'p-5 text-center',
         vencida && corriendo && 'border-danger/40',
         assignment.status === 'pausada' && 'border-warn/40',
       )}

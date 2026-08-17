@@ -38,7 +38,7 @@ export function AssignmentTimeline({ events }: { events: AssignmentEvent[] }) {
 
   return (
     <>
-      <Card>
+      <Card className="p-5">
         <h2 className="mb-4 text-sm font-bold text-ink">Bitácora</h2>
 
         <ol className="space-y-4">

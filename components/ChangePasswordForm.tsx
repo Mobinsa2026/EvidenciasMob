@@ -58,7 +58,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <Card>
+    <Card className="p-5">
       <h2 className="text-sm font-bold text-ink">Cambiar contraseña</h2>
       <p className="mt-1 text-xs text-muted">
         Usa al menos 8 caracteres. Cámbiala en cuanto entres por primera vez.

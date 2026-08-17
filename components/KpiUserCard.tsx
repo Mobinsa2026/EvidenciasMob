@@ -17,7 +17,7 @@ export function KpiUserCard({ kpi }: { kpi: UserKpi }) {
   const pct = kpi.pct_a_tiempo;
 
   return (
-    <Card>
+    <Card className="p-5">
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand">
           {kpi.user_name

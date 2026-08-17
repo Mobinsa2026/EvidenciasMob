@@ -127,12 +127,14 @@ export function DesktopNavigation({ role }: { role: Role }) {
       {/* Difumina el contenido que pasa por detrás del dock al hacer scroll. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-full hidden h-16 bg-gradient-to-b from-canvas via-canvas/80 to-transparent md:block"
+        className="pointer-events-none absolute inset-x-0 top-full hidden h-24 bg-gradient-to-b from-canvas via-canvas/85 to-transparent md:block"
       />
 
+      {/* Va completamente debajo del encabezado: montarlo encima chocaba con el
+          título y el subtítulo de cada página. */}
       <nav
         aria-label="Navegación principal"
-        className="pointer-events-none absolute inset-x-0 -bottom-7 hidden justify-center px-6 md:flex"
+        className="pointer-events-none absolute inset-x-0 top-full hidden justify-center px-6 pt-3 md:flex"
       >
         <ul
           className={cn(
