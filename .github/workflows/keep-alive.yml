@@ -24,14 +24,35 @@ jobs:
         env:
           APP_URL: ${{ vars.APP_URL }}
         run: |
-          if [ -z "$APP_URL" ]; then
+          # El campo "Value" de GitHub es un textarea: es fácil que se cuele un
+          # salto de línea o un espacio al pegar la URL, y curl responde con
+          # "URL malformed" sin decir por qué. Se limpia antes de usarla.
+          url=$(printf '%s' "$APP_URL" | tr -d '[:space:]' | sed 's:/*$::')
+
+          if [ -z "$url" ]; then
             echo "Falta la variable APP_URL; no hay nada que consultar."
             exit 0
           fi
 
-          codigo=$(curl -sS -o respuesta.json -w '%{http_code}' "$APP_URL/api/salud")
+          case "$url" in
+            http://*|https://*) ;;
+            *)
+              echo "APP_URL debe empezar con https:// — llegó: '$url'"
+              exit 1
+              ;;
+          esac
+
+          echo "Consultando $url/api/salud"
+          codigo=$(curl -sS --max-time 30 -o respuesta.json -w '%{http_code}' "$url/api/salud")
+
           echo "HTTP $codigo"
-          cat respuesta.json
+          cat respuesta.json || true
+          echo
 
           # Un 503 significa que la base no respondió: conviene enterarse.
-          [ "$codigo" = "200" ]
+          if [ "$codigo" != "200" ]; then
+            echo "La aplicación no respondió correctamente."
+            exit 1
+          fi
+
+          echo "La base está despierta."
