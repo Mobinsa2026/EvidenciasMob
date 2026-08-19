@@ -28,9 +28,11 @@ export function EvidenceGallery({ photos }: { photos: DeliveryPhoto[] }) {
             aria-label={`Ver fotografía ${position + 1}`}
             className="group relative aspect-square overflow-hidden rounded-btn border border-line bg-canvas"
           >
+            {/* Miniatura de 320 px: el recuadro mide ~150 px, así que bajar la
+                foto completa aquí gastaría veinte veces más datos. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={photo.url}
+              src={photo.thumb}
               alt={`Fotografía ${position + 1}`}
               loading="lazy"
               className="size-full object-cover transition-transform duration-200 group-hover:scale-[1.04]"

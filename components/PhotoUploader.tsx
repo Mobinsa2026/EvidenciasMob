@@ -14,6 +14,8 @@ export interface PhotoItem {
   previewUrl: string;
   bytes: number;
   extension: 'webp' | 'jpg';
+  /** Miniatura de 320 px para la galería. `null` si no se pudo generar. */
+  thumb: Blob | null;
 }
 
 interface PhotoUploaderProps {
@@ -54,6 +56,7 @@ export function PhotoUploader({ photos, error, onChange }: PhotoUploaderProps) {
           previewUrl: compressed.previewUrl,
           bytes: compressed.bytes,
           extension: compressed.extension,
+          thumb: compressed.thumb,
         });
       } catch {
         toast.error('Error al cargar la fotografía');

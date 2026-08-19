@@ -17,6 +17,7 @@ import {
   photoPath,
   removeFiles,
   signaturePath,
+  thumbPath,
   uploadFile,
 } from '@/lib/storage';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
@@ -63,7 +64,12 @@ export async function POST(request: NextRequest) {
   const limit = limitWrite(request);
   if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds);
 
+  /** Todo lo subido a Storage, para poder revertir si falla el insert. */
   const uploadedPhotos: string[] = [];
+  /** Solo las fotos, en orden: es lo que se guarda en `delivery_photos`. */
+  const photoKeys: string[] = [];
+  /** Miniatura de cada foto, alineada por índice. `null` si no llegó. */
+  const thumbKeys: (string | null)[] = [];
   let uploadedSignature: string | null = null;
 
   try {
@@ -101,6 +107,12 @@ export async function POST(request: NextRequest) {
 
     // 2 · Fotografías
     const photos = form.getAll('photos').filter((v): v is File => v instanceof File);
+
+    // Miniaturas de 320 px que genera el navegador: son las que usa la galería
+    // del historial, para no descargar la foto completa por cada recuadro.
+    // Son opcionales — un navegador viejo puede no producirlas y la evidencia
+    // debe guardarse igual.
+    const thumbs = form.getAll('thumbs').filter((v): v is File => v instanceof File);
 
     if (photos.length < MIN_PHOTOS) {
       return jsonError('Agrega al menos una fotografía de la entrega.', 422, {
@@ -206,6 +218,23 @@ export async function POST(request: NextRequest) {
       const key = photoPath(folio, i + 1, photos[i].type);
       await uploadFile(PHOTOS_BUCKET, key, photos[i], photos[i].type);
       uploadedPhotos.push(key);
+      photoKeys.push(key);
+
+      // La miniatura corresponde por posición. Si falla su subida no se
+      // interrumpe la entrega: la galería cae a la foto completa.
+      const thumb = thumbs[i];
+      thumbKeys.push(null);
+
+      if (thumb && thumb.type.startsWith('image/') && thumb.size <= MAX_PHOTO_BYTES) {
+        const thumbKey = thumbPath(folio, i + 1, thumb.type);
+        try {
+          await uploadFile(PHOTOS_BUCKET, thumbKey, thumb, thumb.type);
+          uploadedPhotos.push(thumbKey);
+          thumbKeys[i] = thumbKey;
+        } catch {
+          // Se queda sin miniatura y ya.
+        }
+      }
     }
 
     // 8 · Registro en base de datos (created_at lo pone el servidor)
@@ -237,9 +266,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { error: photosError } = await supabase.from('delivery_photos').insert(
-      uploadedPhotos.map((path, index) => ({
+      photoKeys.map((path, index) => ({
         delivery_id: delivery.id,
         photo_url: path,
+        thumb_url: thumbKeys[index] ?? null,
         position: index + 1,
       })),
     );
@@ -282,7 +312,7 @@ export async function POST(request: NextRequest) {
         assignment_id: assignment.id,
         user_id: user.id,
         type: 'completada',
-        photo_url: uploadedPhotos[0],
+        photo_url: photoKeys[0],
         note: `Evidencia ${delivery.folio}`,
       });
 
@@ -309,7 +339,7 @@ export async function POST(request: NextRequest) {
           folio: delivery.folio,
           created_at: delivery.created_at,
           employee_name: employee.name,
-          photo_count: uploadedPhotos.length,
+          photo_count: photoKeys.length,
         },
         assignment: assignmentClosed,
       },

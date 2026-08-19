@@ -2,14 +2,19 @@
 --  Usuarios iniciales
 --  Ejecutar después de migration-002-usuarios-tareas.sql
 --
---  Contraseñas de arranque (cámbialas desde Ajustes → Cambiar contraseña):
+--  rosendo  · jefe
+--  diego    · asistente
+--  paola    · asistente
 --
---    rosendo  ·  Rosendo2026*   (jefe)
---    diego    ·  Entrega2026*   (asistente)
---    paola    ·  Entrega2026*   (asistente)
+--  Las contraseñas de arranque NO se guardan aquí: te las entrega el
+--  administrador del sistema por un canal seguro. Cámbialas en el primer
+--  ingreso desde Ajustes → Cambiar contraseña.
 --
 --  Los hashes son scrypt con sal aleatoria: de aquí no se puede recuperar la
 --  contraseña original.
+--
+--  Si la base ya fue sembrada y quieres rotar contraseñas, ejecuta
+--  actualizar-contrasenas.sql (este seed solo inserta usuarios que no existan).
 --
 --  Diego y Paola son nombres provisionales; cámbialos por los reales desde
 --  Ajustes → Usuarios, o con un UPDATE sobre app_users y employees.
@@ -32,17 +37,17 @@ select
 from (values
   (
     'Rosendo Muñoz', 'rosendo',
-    'scrypt$b952dbd3a3d06ace97a07fb1ac18c131$1b94b5d1d88669fc7ac5cd2446306eda67278f9b68e8760277f1351a228be2824d17daa8db6dce71d5063c845e6d46ecfec23a79c1de4b0766595eaca4aeadea',
+    'scrypt$a4f96b9681e6089862daadd61cb679d4$ccf4334fa46625522fe5b421c9f48ddeacb8661c7b235238df2740cde789a9d1568ba3017c8157888623bc26af93ee0b430e556f17caf79d174f24899f54c817',
     'jefe'
   ),
   (
     'Diego Fuentes', 'diego',
-    'scrypt$d8cea3a319517bb147d369c75bbb87ba$143bace91ab857e4d7fcf37870300ab7e7b86e4e6bc5d33912fab03584c0a750faac3daad7a5629ce35c93143919a275141411f5b432f25a0e5411fd2b475292',
+    'scrypt$4bc75332e8381e557d0bb3abc25730da$833fda55aa946116c1d8aec630f19be5ce899453d8ac49def381f81042110242de75397535f7adefb18497c580f1fe90292a067b44102f86bdc0ecbc347d95fb',
     'asistente'
   ),
   (
     'Paola Rentería', 'paola',
-    'scrypt$04b1658bf72ee85597939d5387750f4d$3ba70abe6283f2808e48370c520e95864c0b28e2429a24590964ab628a7e87b60c05c9530d53295072077af0d78f78cae0991cbea44ece3646070fb666745842',
+    'scrypt$1018ee8c8b4cc8f0dd6d1cf66bfa7ed8$7049a0f8e110c313ca88aed3ad93e2cc33a1b30a304dcab4a6bde10cc22cb5cc0d161272977a82d9c607ca31455702ffb1e6ba0f6d51b34596fb3de2add63e21',
     'asistente'
   )
 ) as v(name, username, password_hash, role)

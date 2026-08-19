@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Camera, ExternalLink, MapPin, PenLine, Receipt } from 'lucide-react';
+import { Archive, Camera, ExternalLink, MapPin, PenLine, Receipt } from 'lucide-react';
 import { DeleteEvidenceDialog } from '@/components/DeleteEvidenceDialog';
 import { EvidenceActions } from '@/components/EvidenceActions';
 import { EvidenceGallery } from '@/components/EvidenceGallery';
@@ -99,7 +99,11 @@ export default async function EvidencePage({ params }: PageProps) {
           delivery.photo_count === 1 ? 'fotografía registrada' : 'fotografías registradas'
         }`}
       >
-        <EvidenceGallery photos={delivery.photos} />
+        {delivery.photos_archived_at ? (
+          <ArchivadoAviso fecha={delivery.photos_archived_at} />
+        ) : (
+          <EvidenceGallery photos={delivery.photos} />
+        )}
       </SectionCard>
 
       {/* Firma */}
@@ -107,7 +111,9 @@ export default async function EvidencePage({ params }: PageProps) {
         icon={<PenLine className="size-[18px]" aria-hidden />}
         title="Firma registrada"
       >
-        {delivery.signature ? (
+        {delivery.photos_archived_at ? (
+          <ArchivadoAviso fecha={delivery.photos_archived_at} />
+        ) : delivery.signature ? (
           <div className="overflow-hidden rounded-btn border border-line bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -174,6 +180,26 @@ export default async function EvidencePage({ params }: PageProps) {
       >
         Volver al historial
       </Link>
+    </div>
+  );
+}
+
+/**
+ * Las imágenes de un periodo respaldado se borran de Supabase para liberar
+ * espacio, pero la evidencia sigue existiendo: aquí se dice dónde están en vez
+ * de mostrar recuadros rotos.
+ */
+function ArchivadoAviso({ fecha }: { fecha: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-btn border border-line bg-canvas px-4 py-3.5">
+      <Archive className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-ink">Archivada</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-muted">
+          Las imágenes pasaron al respaldo el {formatNumericDate(fecha)} para liberar
+          espacio. El registro de la entrega se conserva completo.
+        </p>
+      </div>
     </div>
   );
 }

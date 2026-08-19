@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { BottomNavigation, DesktopNavigation } from '@/components/BottomNavigation';
+import { EspacioAviso } from '@/components/EspacioAviso';
 import { SessionProvider } from '@/components/SessionProvider';
 import { ToastProvider } from '@/components/ui/Toast';
 import { getSessionUser } from '@/lib/auth';
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   encabezado, así que no suma altura al bloque fijo. */}
               <div className="sticky top-0 z-50">
                 <Header user={user} />
+                {user.role === 'jefe' && <EspacioAviso />}
                 <DesktopNavigation role={user.role} />
               </div>
 

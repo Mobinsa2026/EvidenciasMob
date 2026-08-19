@@ -224,26 +224,53 @@ export async function getDelivery(idOrFolio: string): Promise<DeliveryView | nul
 
   const { data: photoRows, error: photoError } = await supabase
     .from('delivery_photos')
-    .select('id, photo_url, position')
+    .select('id, photo_url, thumb_url, position')
     .eq('delivery_id', row.id)
     .order('position');
 
   if (photoError) throw new Error(photoError.message);
 
-  const paths = (photoRows ?? []).map((p) => p.photo_url as string);
-  const urls = await signedUrls(PHOTOS_BUCKET, paths);
+  const filas = photoRows ?? [];
+  const paths = filas.map((p) => p.photo_url as string);
+
+  // Si las imágenes ya se archivaron no hay nada que firmar: pedir URLs de
+  // archivos inexistentes solo gastaría llamadas.
+  if (row.photos_archived_at) {
+    return {
+      ...row,
+      employee_name: employee?.name ?? 'Sin asignar',
+      photo_count: paths.length,
+      photos: [],
+      signature: null,
+    };
+  }
+
+  // Fotos y miniaturas se firman en una sola llamada por bucket.
+  const thumbPaths = filas
+    .map((p) => p.thumb_url as string | null)
+    .filter((p): p is string => Boolean(p));
+
+  const urls = await signedUrls(PHOTOS_BUCKET, [...paths, ...thumbPaths]);
   const signature = await signedUrl(SIGNATURES_BUCKET, row.signature_url);
 
   return {
     ...row,
     employee_name: employee?.name ?? 'Sin asignar',
     photo_count: paths.length,
-    photos: (photoRows ?? []).map((p) => ({
-      id: p.id as string,
-      photo_url: p.photo_url as string,
-      position: p.position as number,
-      url: urls.get(p.photo_url as string) ?? '',
-    })),
+    photos: filas.map((p) => {
+      const url = urls.get(p.photo_url as string) ?? '';
+      const thumbPath = p.thumb_url as string | null;
+
+      return {
+        id: p.id as string,
+        photo_url: p.photo_url as string,
+        thumb_url: thumbPath,
+        position: p.position as number,
+        url,
+        // Sin miniatura (evidencias previas a la migración 003) se usa la foto.
+        thumb: (thumbPath && urls.get(thumbPath)) || url,
+      };
+    }),
     signature,
   };
 }

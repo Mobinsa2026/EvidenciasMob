@@ -11,9 +11,13 @@ export interface Employee {
 export interface DeliveryPhoto {
   id: string;
   photo_url: string;
+  /** Ruta de la miniatura de 320 px. `null` en evidencias antiguas. */
+  thumb_url: string | null;
   position: number;
   /** URL firmada temporal, generada por el backend. */
   url: string;
+  /** URL firmada de la miniatura; cae a `url` si no hay miniatura. */
+  thumb: string;
 }
 
 export interface Delivery {
@@ -32,6 +36,11 @@ export interface Delivery {
   longitude: number | null;
   location_accuracy: number | null;
   created_at: string;
+  /**
+   * Cuándo se liberó el espacio de sus imágenes tras descargar el respaldo.
+   * El registro permanece; solo los archivos dejaron de estar en Storage.
+   */
+  photos_archived_at: string | null;
 }
 
 /** Evidencia lista para pintar en la UI. */
@@ -157,6 +166,11 @@ export interface AssignmentEvent {
   photo_url: string | null;
   /** URL firmada temporal de la fotografía. */
   photo: string | null;
+  /**
+   * Cuándo pasó la fotografía al respaldo. `photo_url` se conserva como
+   * constancia de que existió, pero el archivo ya no está en Storage.
+   */
+  photo_archived_at: string | null;
   note: string | null;
   created_at: string;
 }

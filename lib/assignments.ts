@@ -137,7 +137,12 @@ export async function getAssignmentEvents(id: string): Promise<AssignmentEvent[]
     AssignmentEvent & { autor: { name: string } | { name: string }[] | null }
   >;
 
-  const paths = rows.map((r) => r.photo_url).filter((p): p is string => Boolean(p));
+  // Las fotos archivadas ya no están en Storage: firmarlas daría una URL rota.
+  const paths = rows
+    .filter((r) => !r.photo_archived_at)
+    .map((r) => r.photo_url)
+    .filter((p): p is string => Boolean(p));
+
   const urls = await signedUrls(PHOTOS_BUCKET, paths);
 
   return rows.map((row) => {
@@ -149,7 +154,11 @@ export async function getAssignmentEvents(id: string): Promise<AssignmentEvent[]
       user_name: autor?.name ?? '—',
       type: row.type,
       photo_url: row.photo_url,
-      photo: row.photo_url ? (urls.get(row.photo_url) ?? null) : null,
+      photo:
+        row.photo_url && !row.photo_archived_at
+          ? (urls.get(row.photo_url) ?? null)
+          : null,
+      photo_archived_at: row.photo_archived_at ?? null,
       note: row.note,
       created_at: row.created_at,
     };

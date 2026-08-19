@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import {
+  Archive,
   CheckCircle2,
   CircleDashed,
   Pause,
@@ -91,6 +92,13 @@ export function AssignmentTimeline({ events }: { events: AssignmentEvent[] }) {
                         loading="lazy"
                       />
                     </button>
+                  )}
+
+                  {event.photo_archived_at && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
+                      <Archive className="size-3.5 shrink-0" aria-hidden />
+                      Fotografía archivada en el respaldo
+                    </p>
                   )}
                 </div>
               </li>

@@ -165,6 +165,11 @@ export function DeliveryForm({
 
       photos.forEach((photo, index) => {
         form.append('photos', photo.blob, `photo-${index + 1}.${photo.extension}`);
+        // La miniatura viaja con el mismo nombre que su foto para que el
+        // servidor las empareje aunque alguna no se haya podido generar.
+        if (photo.thumb) {
+          form.append('thumbs', photo.thumb, `photo-${index + 1}.${photo.extension}`);
+        }
       });
       form.set('signature', signatureBlob, `signature.${signatureExtension}`);
 

@@ -8,7 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * runtime Edge y no tiene acceso a node:crypto ni a Supabase.
  */
 
-const PUBLIC_PATHS = ['/login', '/api/auth/login'];
+// `/api/salud` es público a propósito: lo llama un cron externo para que el
+// proyecto gratuito de Supabase no se pause por inactividad.
+const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/salud'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
