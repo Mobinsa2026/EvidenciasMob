@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BarChart3, KeyRound, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, HardDrive, KeyRound, LogOut, ShieldCheck, Users } from 'lucide-react';
 import type { SessionUser } from '@/lib/types';
 
 function initials(name: string): string {
@@ -85,6 +85,13 @@ export function UserMenu({ user }: { user: SessionUser }) {
                 </MenuLink>
                 <MenuLink href="/empleados" icon={Users} onClick={() => setOpen(false)}>
                   Empleados
+                </MenuLink>
+                <MenuLink
+                  href="/almacenamiento"
+                  icon={HardDrive}
+                  onClick={() => setOpen(false)}
+                >
+                  Almacenamiento
                 </MenuLink>
               </>
             )}
