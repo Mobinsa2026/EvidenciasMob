@@ -1,7 +1,14 @@
 import { NextRequest } from 'next/server';
-import { forbidden, jsonError, serverError, unauthorized } from '@/lib/api';
+import {
+  forbidden,
+  jsonError,
+  serverError,
+  tooManyRequests,
+  unauthorized,
+} from '@/lib/api';
 import { ForbiddenError, UnauthorizedError, requireJefe } from '@/lib/auth';
 import { formatNumericDate, formatTime } from '@/lib/format';
+import { limitBackup } from '@/lib/rate-limit';
 import { PHOTOS_BUCKET, SIGNATURES_BUCKET } from '@/lib/storage';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type ZipEntry, crearZip, csv } from '@/lib/zip';
@@ -48,6 +55,9 @@ const ESTADO = {
 } as const;
 
 export async function GET(request: NextRequest) {
+  const limit = limitBackup(request);
+  if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds);
+
   try {
     const user = await requireJefe();
 

@@ -74,6 +74,18 @@ export function limitDelete(request: Request): RateLimitResult {
 }
 
 /**
+ * Respaldos: 10 por hora y por IP.
+ *
+ * No es por seguridad —hay que ser jefe con sesión válida— sino por costo: cada
+ * descarga lee del Storage todos los archivos del mes y eso se cobra contra el
+ * egress del plan gratuito. El límite evita que un doble clic o una recarga
+ * insistente disparen varias generaciones completas a la vez.
+ */
+export function limitBackup(request: Request): RateLimitResult {
+  return rateLimit(`backup:${clientIp(request)}`, 10, 60 * 60);
+}
+
+/**
  * Cloudflare Turnstile — desactivado mientras no exista `TURNSTILE_SECRET_KEY`.
  * Al definir la variable, la verificación se activa sin tocar el resto del código.
  */
